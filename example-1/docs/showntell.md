@@ -7,7 +7,7 @@ This mini tutorial will demonstrate how to use SAP API Management (SAM) to acces
 ## Prerequisites
 You will need the following:
 - An Amazon developer account on [Amazon's developer website](https://developer.amazon.com)
-- An active SAP Cloud Platform with API Management subscription enabled
+- An active SAP Cloud Platform with [API Management subscription](https://blogs.sap.com/2020/06/22/part-1-enable-sap-cloud-platform-api-management-in-cloud-foundry-environment/) enabled
 - A system with an exposed API that can be accessed remotely
   - The quickest way to get access to such a system is probably by following [Marius Obert's tiny CAP project](https://blogs.sap.com/2020/05/28/cloudfoundryfun-12-create-a-tiny-cap-project/) guide or if you are really short on time simply downloading & deploying [the tinyCAP](https://github.tools.sap/D056949/tinyCAP) with <code>cf push tinyCAP</code> (just make sure you are in the right folder and don't waste half a day trying to figure out what's going on).
 - (somewhat optional) [Node.js and npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) and some basic understanding of JavaScript (Sorry Max)
@@ -129,6 +129,7 @@ exports.handler = Alexa.SkillBuilders.custom()
     .lambda();
 ```
 Save and deploy your code. Switch to the <b>Test</b> tab to check whether everything is working up until now. You might need to switch to development mode to enable testing.
+
 ![Testing Intent](images/alexa_test_1.png)
 
 Great! Now let's add some functionality to our intent. Since we need the axios and ssl-root-cas npm packages we will add them to our skill's dependencies in the <code>package.json</code> file.
@@ -187,3 +188,8 @@ function formatResourceCatalogResponse(baseString, resources){
 to <code>index.js</code> to help with response formatting. Notice the <code>async</code> keyword for the <code>handle</code> function. Save and Deploy your changes. Testing our skill now should result in a nicely formatted output of available resources, and indeed that is the case.
 
 ![Testing intent 2](./images/alexa_test_2.png)
+
+A full download of the code used to run my Alexa skill can be found in [this repo](https://github.com/Grimmig18/alexa-api-management/tree/master/example-1). If you want to use this code feel free to import it into your environment, just make sure to adjust any names/strings to your needs.
+
+## Further reading
+- [Amazon's Alexa Whitepapers](https://developer.amazon.com/en-US/alexa/alexa-skills-kit/get-deeper/whitepapers)
