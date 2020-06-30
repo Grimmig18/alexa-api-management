@@ -2,7 +2,7 @@
 SAP API Management & Hyperscaler
 
 ## Introduction
-This mini tutorial will demonstrate how to use SAP API Management (SAM) to access and manage APIs of your systems. Using a simple example application hosted on Cloud Platform we will demonstrate the basics of SAM and how to leverage the advantages of SAM. For that we will create a simple AWS hosted Alexa skill, although here anything that can run code and has access to the internet should work just as fine.
+This mini tutorial will demonstrate how to use SAP API Management to access and manage APIs of your systems. Using a simple example application hosted on Cloud Platform we will demonstrate the basics of API Management and how to leverage its advantages. For that we will create a simple AWS hosted Alexa skill, although here anything that can run code and has access to the internet should work just as fine.
 
 ## Prerequisites
 You will need the following:
@@ -10,6 +10,7 @@ You will need the following:
 - An active SAP Cloud Platform with [API Management subscription](https://blogs.sap.com/2020/06/22/part-1-enable-sap-cloud-platform-api-management-in-cloud-foundry-environment/) enabled
 - A system with an exposed API that can be accessed remotely
   - The quickest way to get access to such a system is probably by following [Marius Obert's tiny CAP project](https://blogs.sap.com/2020/05/28/cloudfoundryfun-12-create-a-tiny-cap-project/) guide or if you are really short on time simply downloading & deploying [the tinyCAP](https://github.tools.sap/D056949/tinyCAP) with <code>cf push tinyCAP</code> (just make sure you are in the right folder and don't waste half a day trying to figure out what's going on).
+- [Cloud Foundry CLI](https://chocolatey.org/packages/cloudfoundry-cli)
 - (somewhat optional) [Node.js and npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) and some basic understanding of JavaScript (Sorry Max)
   
 With that all the necessary Prerequisites should be fulfilled.
@@ -18,19 +19,61 @@ With that all the necessary Prerequisites should be fulfilled.
 ### Setting up the API Provider
 First we will configure an API Provider for the tinyCAP app you (hopefully) set up as part of the prerequisites. On the API Portal navigate to <b>Configure</b>. It should look something like this, although if this is your first time using the API Portal, no API Providers will be listed.
 ![API Portal > Configure](./images/api_portal_configure.PNG)
-To create a new API Provider, which will act as a middle layer between our tinyCAP app and our Alexa skill, click on <b>Create</b>. You will first be asked to provide a name and an (optional) description, for which you can choose whatever you like. Once that is done advance to connection, where the interesting bits of setting up the API Provider happen. For the <b>Type</b> of your connection choose <b>Internet</b>, since we access our system via simple HTTP requests. To find out the host of our tinyCAP app we can use the Cloudfoundry CLI using the <code> cf apps</code> command, which will result in a display of all your deployed apps.
+To create a new API Provider, which will act as a middle layer between our tinyCAP app and our Alexa skill, click on <b>Create</b>. You will first be asked to provide a name and an (optional) description, for which you can choose whatever you like. Once that is done advance to <b>Connection</b>, where the interesting bits of setting up the API Provider happen. Enter the following attributes as your connection settings:
+
+|Property|Value|
+|---|---|
+|Type|Internet|
+|Host|(your application host)|
+|Port|443|
+|Use SSL|true|
+|Trust Store||
+|Key Store Certificate||
+
+![API Provider Connection](./images/tinycap_connection.PNG)
+
+If you don't know the host of your application you can use the Cloud Foundry CLI and run the <code>cf apps</code> command, which will display an overview of all your deployed apps and their hosts.
+
 ![Cloudfoundry CLI](./images/cf_apps.PNG)
-I have yet to find a reliable way to find out the <b>Port</b> of my applications, but <b>443</b> usually works for HTTPS applications. Make sure to also tick <b>Use SSL</b>. Now you should be left with a similar setup to this, just with a different host.
-![Cloudfoundry CLI](./images/tinycap_connection.PNG)
-All that's left to do is configuring the <b>Path Prefix</b> under <b> Catalog Service Settings</b>. If you already played around a little with the tinyCAP app, you will know that a catalog of all available recourses can be accessed under [<code> https://YOUR-APPLICATION-URL/my</code>](). For now we will enter <code>/my</code> only as the <b> Path Prefix</b> and leave <b>Service Collection URL</b> empty. <b>Don't</b> check <b>Trust all</b> and select <b>None</b> as <b>Authentication type</b>. To check whether your configuration works click on the URL provided under <b>Catalog URL</b> which should take you straight to an overview of all available recourses of your tinyCAP app in JSON format. You can save and Test you Connection now.
+I have yet to find a reliable way to find out the <b>Port</b> of my applications, but <b>443</b> usually works for HTTPS applications.
+Now you should be left with a similar setup to this, just with a different host.
+
+All that's left to do is configuring the <b>Path Prefix</b> under <b> Catalog Service Settings</b>. If you already played around a little with the tinyCAP app, you will know that a catalog of all available recourses can be accessed under [<code> https://YOUR-APPLICATION-URL/my</code>](). For now we will enter 
+
+|Property|Value|
+|---|---|
+|Path Prefix|<code>/my</code>|
+|Service Collection URL||
+|Trust All|false|
+|Authentification Type|None|
+
+To check whether your configuration works click on the URL provided under <b>Catalog URL</b> which should take you straight to an overview of all available recourses of your tinyCAP app in JSON format. You can save and Test you Connection now.
 ![API Portal > Catalog Service Settings](./images/tinycap_catalog_service_settings.PNG)
 
 ### Setting up the API
 To expose our previously configured API Provider we now need to create an API. On the API Portal navigate to <b>Develop</b>. Once again if this is your first time working with the API Portal no APIs will be listed here.
 ![API Portal > Develop](./images/api_portal_develop.PNG)
-Click on <b> Create</b>. You will be prompted with a pop-up requiring you to fill out all the necessary details to set up your API. Check API Provider and select the provider you created in the last step as <b>API Provider</b>. As <b>URL</b> we enter the Path Prefix we configured the APi Provider with, <code>/my</code>. I will once again entrust you with choosing an appropriate <b>Name</b>, <b>Title</b> and <b>Description</b>. The <b>Host Alias</b> and <b>API Base Path</b> will determine the URL through which the APi can be accessed. The Host Alias should be filled out automatically, as for the Base Path just enter something simple like <code>/demo</code>. Select REST as the <b>Service Type</b>. Click on <b>Create</b>. you now have the opportunity to check your input again. Make sure to Save and Deploy your API before continuing.
+Click on <b> Create</b>. You will be prompted with a pop-up requiring you to fill out all the necessary details to set up your API. 
+Fill out the required fields as shown below
+
+|Property|Value|
+|---|---|
+|Select|API Provider|
+|API Provider|(name of your API Provider)|
+|Link API Provider|true|
+|URL|<code>/my</code>|
+|Name|demo|
+|Title||
+|Description ||
+|Host Alias|(choose one of the options)|
+|API Base Path||
+|Service Type|REST|
+
+The <b>Host Alias</b> and <b>API Base Path</b> will determine the URL through which the APi can be accessed. The Host Alias should be filled out automatically, as for the Base Path just enter something simple like <code>/demo</code>. Make sure to Save and Deploy your API before continuing.
+
 ![API Portal > Create API 1/2](./images/create_api_1.PNG)
 ![API Portal > Create API 2/2](./images/create_api_2.PNG)
+
 To test whether the setup of your API has been successful, click in the API you just created and open the <b>API Proxy URL</b> in your webbrowser. It should display the same data as the <b>Catalog URL</b> from the last step.
 
 ## What do we have so far?
@@ -40,16 +83,24 @@ We are <em>almost</em> done with the API part of this (Blog Post? Tutorial? Show
  * Test APIs using Axios requests
  */
 const axios = require('axios');
-const baseURL = "";
 
-// Make the request using axios, log the response
-axios.get(baseURL)
-    .then((response) => {
-        console.log(response.data.value);
-    })
-    .catch((error) => {
-        console.log(error);
-    });
+(async function () {
+    const baseURL = "";
+
+    let output;
+    try {
+        // Get resources from API and format as readable string
+        const response = await axios.get(baseURL);
+        output = `Available resources are: ${response.data.value.map(entity => entity.name).join(", ")}.`;
+    } catch(e) {
+        // Error handling
+        console.error(e);
+        output = "An error occurred";
+    }
+
+    console.log(output);
+
+})();
 ```
 Note that we make use of the Axios npm package, so make sure to run <code>npm init</code> and <code>npm install axios</code>. First we will need to set the URL we want to make a request to. To check if our code is working we will first make a request to the tinyCAP app directly, without using API Management. For me that means setting
 ```javascript
@@ -67,18 +118,25 @@ Running the programm now will surprisingly result in a SSL Error <code>Unable to
 const axios = require('axios');
 
 // Add PEM chain
-require('ssl-root-cas/latest').create().addFile(__dirname + "/prod-apimanagement-eu20-hana-ondemand-com-chain.pem");
+require('ssl-root-cas').create().addFile("cert.pem");
 
-const baseURL = "https://devrelations.test.apimanagement.eu20.hana.ondemand.com/demo";
+(async function () {
+    const baseURL = "";
 
-// Make the request using axios
-axios.get(baseURL)
-    .then((response) => {
-        console.log(response.data.value);
-    })
-    .catch((error) => {
-        console.log(error);
-    });
+    let output;
+    try {
+        // Get resources from API and format as readable string
+        const response = await axios.get(baseURL);
+        output = `Available resources are: ${response.data.value.map(entity => entity.name).join(", ")}.`;
+    } catch(e) {
+        // Error handling
+        console.error(e);
+        output = "An error occurred";
+    }
+
+    console.log(output);
+
+})();
 ```
 If you copy + paste this code make sure to adjust the file name baseURL accordingly. If we run this our programm now we will see the same data we can see in our webbrowser.
 
@@ -142,7 +200,7 @@ Switch back to <code>index.js</code> and add to the top of the file.
 
 ```javascript
 const axios = require('axios');
-const sslRootCAs = require('ssl-root-cas/latest').create().addFile("cert.pem");
+require('ssl-root-cas/latest').create().addFile("cert.pem");
 ```
 
 Replace the <code>handle</code> function of the <code>getApiDataIntentHandler</code> with
@@ -150,27 +208,21 @@ Replace the <code>handle</code> function of the <code>getApiDataIntentHandler</c
 async handle(handlerInput) {
         
         const baseURL = "https://devrelations.test.apimanagement.eu20.hana.ondemand.com/tinycap";
-        let baseResponseString = "Available resources are: ";
-        let resources = [];
         
         // Perform get request
-        await axios.get(baseURL).then(
-            (response) => {
-                // Add avaiable resources to array
-                for(let resource of response.data.value) {
-                    resources.push(resource);
-                }
-            }
-        ).catch(
-            error => {
-                baseResponseString = "An error occurred";
-            }
-        )
+        let output;
+        try {
+            // Get resources from API and format as readable string
+            const response = await axios.get(baseURL);
+            output = `Available resources are: ${response.data.value.map(entity => entity.name).join(", ")}.`;
+        } catch(e) {
+            // Error handling
+            console.error(e);
+            output = "An error occurred";
+        }
 
-        // Define alexa speech output
-        const speakOutput = formatResourceCatalogResponse(baseResponseString, resources);
         return handlerInput.responseBuilder
-            .speak(speakOutput)
+            .speak(output)
             .getResponse();
     }
 ```
@@ -193,3 +245,4 @@ A full download of the code used to run my Alexa skill can be found in [this rep
 
 ## Further reading
 - [Amazon's Alexa Whitepapers](https://developer.amazon.com/en-US/alexa/alexa-skills-kit/get-deeper/whitepapers)
+- [Run and debug your skill locally](https://medium.com/coinmonks/how-to-develop-an-amazon-alexa-skill-using-node-js-b872ef5320b1)

@@ -3,9 +3,7 @@
 // session persistence, api calls, and more.
 const Alexa = require('ask-sdk-core');
 const axios = require('axios');
-const sslRootCAs = require('ssl-root-cas/latest').create().addFile("cert.pem");
-    //.addFile("../certs/prod-apimanagement-eu20-hana-ondemand-com-chain.pem");
-    // .addFile(__dirname + "/../certs/prod-apimanagement-eu20-hana-ondemand-com-chain.pem");
+// require('ssl-root-cas').create().addFile("cert.pem");
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
@@ -33,40 +31,30 @@ const HelloWorldIntentHandler = {
     }
 };
 const GetApiDataIntentHandler = {
-    // Check whether handler can handle request
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'GetApiDataIntent';
     },
-
-    // Handle request, this is where the magic happens
+    // Handle user's intent request
     async handle(handlerInput) {
+        const baseURL = "https://devrelations.test.apimanagement.eu20.hana.ondemand.com/demo";
         
-        const baseURL = "https://devrelations.test.apimanagement.eu20.hana.ondemand.com/tinycap";
-        let baseResponseString = "Available resources are: ";
-        let resources = [];
+        let speakOutput;
+        try {
+            // Get resources from API and format as readable string
+            const resourcesString = (await axios.get(baseURL)).data.value.map(entity => entity.name).join(", ");
+            speakOutput = `Avaiable resources are: ${resourcesString}.`;
+        } catch(e) {
+            // Error handling
+            speakOutput = "An error occurred";
+        }
         
-        // Perform get request
-        await axios.get(baseURL).then(
-            (response) => {
-                // Add avaiable resources to array
-                for(let resource of response.data.value) {
-                    resources.push(resource);
-                }
-            }
-        ).catch(
-            error => {
-                baseResponseString = "An error occurred";
-            }
-        )
-
-        // Define alexa speech output
-        const speakOutput = formatResourceCatalogResponse(baseResponseString, resources);
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .getResponse();
     }
 };
+
 const HelpIntentHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
@@ -158,14 +146,4 @@ exports.handler = Alexa.SkillBuilders.custom()
         ErrorHandler,
     )
     .lambda();
-
-// Formats available resources for a given base string
-// "Basestring: resource1, resource2, ..., resourceN."
-function formatResourceCatalogResponse(baseString, resources){
-    for(let i = 0; i < resources.length; i++) {
-        baseString += `${resources[i].name + (i !== resources.length - 1 ? ", " : ".")}`;
-    }
-    return baseString;
-}
-    
     
