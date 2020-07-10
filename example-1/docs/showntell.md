@@ -140,6 +140,8 @@ require('ssl-root-cas').create().addFile("cert.pem");
 ```
 If you copy + paste this code make sure to adjust the file name baseURL accordingly. If we run this our programm now we will see the same data we can see in our webbrowser.
 
+<b>Note:</b> If you prefer using Postman, you can also add the .pem file to Postman by navigating to [File > Settings > Certificates](https://learning.postman.com/docs/sending-requests/certificates/).
+
 ## Alexa Skill
 First create a new skill on the [alexa developer console](https://developer.amazon.com/alexa/console/ask). Enter a Skill name of you liking and choose whatever flavour of English you prefer. Choose the Custom as your model and Alexa-Hosted (Node.js) as the backend hosting method, so we can apply what we learned earlier directly to our skill. If prompted whether you want to add a template to your skill, choose the Hello World template. Create your skill, this might take a while.
 ![Alexa > Create new Skill](./images/alexa_create_skill.PNG)
